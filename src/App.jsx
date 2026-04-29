@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   getCsvDownloadUrl,
   getDetails,
@@ -72,94 +72,92 @@ export default function App() {
     items: [],
   });
 
-  function getCommonParams() {
+  const getCommonParams = useCallback(() => {
     return {
       from: fromDate,
       to: toDate,
       menu_scope: menuScope,
     };
-  }
+  }, [fromDate, toDate, menuScope]);
 
-  async function loadReportData(customPage = page) {
-    setLoading(true);
-    setError("");
+  const loadReportData = useCallback(
+    async (customPage = page) => {
+      setLoading(true);
+      setError("");
 
-    try {
-      const commonParams = getCommonParams();
+      try {
+        const commonParams = getCommonParams();
 
-      const [
-        summaryResponse,
-        detailsResponse,
-        timelineResponse,
-        deviceResponse,
-        pageResponse,
-      ] = await Promise.all([
-        getSummary(commonParams),
-        getDetails({
-          ...commonParams,
-          page: customPage,
-          limit,
-          sort: "clicked_at",
-          order: "desc",
-        }),
-        getTimeline(commonParams),
-        getDevice(commonParams),
-        getPageReport(commonParams),
-      ]);
+        const [
+          summaryResponse,
+          detailsResponse,
+          timelineResponse,
+          deviceResponse,
+          pageResponse,
+        ] = await Promise.all([
+          getSummary(commonParams),
+          getDetails({
+            ...commonParams,
+            page: customPage,
+            limit,
+            sort: "clicked_at",
+            order: "desc",
+          }),
+          getTimeline(commonParams),
+          getDevice(commonParams),
+          getPageReport(commonParams),
+        ]);
 
-      setSummaryData(
-        summaryResponse.data || {
-          total_clicks: 0,
-          top_nav_text: "",
-          top_nav_clicks: 0,
-          items: [],
-        },
-      );
+        setSummaryData(
+          summaryResponse.data || {
+            total_clicks: 0,
+            top_nav_text: "",
+            top_nav_clicks: 0,
+            items: [],
+          },
+        );
 
-      setDetailsData({
-        meta: detailsResponse.meta || {
-          page: 1,
-          total_pages: 1,
-          total: 0,
-          limit,
-        },
-        items: detailsResponse.items || [],
-      });
+        setDetailsData({
+          meta: detailsResponse.meta || {
+            page: 1,
+            total_pages: 1,
+            total: 0,
+            limit,
+          },
+          items: detailsResponse.items || [],
+        });
 
-      setTimelineData(
-        timelineResponse.data || {
-          total_clicks: 0,
-          items: [],
-        },
-      );
+        setTimelineData(
+          timelineResponse.data || {
+            total_clicks: 0,
+            items: [],
+          },
+        );
 
-      setDeviceData(
-        deviceResponse.data || {
-          total_clicks: 0,
-          items: [],
-        },
-      );
+        setDeviceData(
+          deviceResponse.data || {
+            total_clicks: 0,
+            items: [],
+          },
+        );
 
-      setPageData(
-        pageResponse.data || {
-          total_clicks: 0,
-          items: [],
-        },
-      );
+        setPageData(
+          pageResponse.data || {
+            total_clicks: 0,
+            items: [],
+          },
+        );
 
-      setPage(customPage);
-    } catch (err) {
-      console.error(err);
-      setError("Fehler beim Laden der Report-Daten.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadReportData(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+        setPage(customPage);
+      } catch (err) {
+        console.error(err);
+        setError("Fehler beim Laden der Report-Daten.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [getCommonParams, limit, page],
+  );
 
   function handleLoad() {
     loadReportData(1);
