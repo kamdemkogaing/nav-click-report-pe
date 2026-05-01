@@ -13,6 +13,8 @@ function buildQuery(params = {}) {
 }
 
 async function fetchJson(url) {
+  console.log("API Request:", url);
+
   const response = await fetch(url, {
     method: "GET",
     headers: {
@@ -24,18 +26,21 @@ async function fetchJson(url) {
     throw new Error(`HTTP ${response.status}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log("API Response:", data);
+
+  return data;
 }
 
 function normalizeSummary(response) {
-  const data = response?.data || response;
+  const data = response?.data || response || {};
 
   return {
     data: {
-      total_clicks: data?.total_clicks || 0,
-      top_nav_text: data?.top_nav_text || "",
-      top_nav_clicks: data?.top_nav_clicks || 0,
-      items: Array.isArray(data?.items) ? data.items : [],
+      total_clicks: data.total_clicks || 0,
+      top_nav_text: data.top_nav_text || "",
+      top_nav_clicks: data.top_nav_clicks || 0,
+      items: Array.isArray(data.items) ? data.items : [],
     },
   };
 }
@@ -65,12 +70,12 @@ function normalizeDetails(response) {
 }
 
 function normalizeReport(response) {
-  const data = response?.data || response;
+  const data = response?.data || response || {};
 
   return {
     data: {
-      total_clicks: data?.total_clicks || 0,
-      items: Array.isArray(data?.items) ? data.items : [],
+      total_clicks: data.total_clicks || 0,
+      items: Array.isArray(data.items) ? data.items : [],
     },
   };
 }

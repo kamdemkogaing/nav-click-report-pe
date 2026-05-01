@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getCsvDownloadUrl,
   getDetails,
@@ -20,22 +20,20 @@ import "./styles.css";
 import { openCsvDownload } from "./utils/exportCsv";
 
 function getDefaultFromDate() {
-  const today = new Date();
-  const before = new Date();
-  before.setDate(today.getDate() - 30);
-  return before.toISOString().slice(0, 10);
+  return "2026-04-01";
 }
 
 function getDefaultToDate() {
-  return new Date().toISOString().slice(0, 10);
+  return "2026-05-01";
 }
 
 export default function App() {
+  const didInitialLoad = useRef(false);
+
   const [fromDate, setFromDate] = useState(getDefaultFromDate());
   const [toDate, setToDate] = useState(getDefaultToDate());
   const [menuScope, setMenuScope] = useState("main_navigation");
   const [limit, setLimit] = useState(100);
-  const [page, setPage] = useState(1);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -85,9 +83,9 @@ export default function App() {
       setLoading(true);
       setError("");
 
-      try {
-        const commonParams = getCommonParams();
+      const commonParams = getCommonParams();
 
+      try {
         const [
           summaryResponse,
           detailsResponse,
@@ -108,47 +106,14 @@ export default function App() {
           getPageReport(commonParams),
         ]);
 
-        setSummaryData(
-          summaryResponse.data || {
-            total_clicks: 0,
-            top_nav_text: "",
-            top_nav_clicks: 0,
-            items: [],
-          },
-        );
-
+        setSummaryData(summaryResponse.data);
         setDetailsData({
-          meta: detailsResponse.meta || {
-            page: 1,
-            total_pages: 1,
-            total: 0,
-            limit,
-          },
-          items: detailsResponse.items || [],
+          meta: detailsResponse.meta,
+          items: detailsResponse.items,
         });
-
-        setTimelineData(
-          timelineResponse.data || {
-            total_clicks: 0,
-            items: [],
-          },
-        );
-
-        setDeviceData(
-          deviceResponse.data || {
-            total_clicks: 0,
-            items: [],
-          },
-        );
-
-        setPageData(
-          pageResponse.data || {
-            total_clicks: 0,
-            items: [],
-          },
-        );
-
-        setPage(customPage);
+        setTimelineData(timelineResponse.data);
+        setDeviceData(deviceResponse.data);
+        setPageData(pageResponse.data);
       } catch (err) {
         console.error(err);
         setError("Fehler beim Laden der Report-Daten.");
@@ -161,6 +126,11 @@ export default function App() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      if (didInitialLoad.current) {
+        return;
+      }
+
+      didInitialLoad.current = true;
       loadReportData(1);
     }, 0);
 
