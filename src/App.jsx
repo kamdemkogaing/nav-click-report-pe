@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   getCsvDownloadUrl,
   getDetails,
@@ -81,7 +81,7 @@ export default function App() {
   }, [fromDate, toDate, menuScope]);
 
   const loadReportData = useCallback(
-    async (customPage = page) => {
+    async (customPage = 1) => {
       setLoading(true);
       setError("");
 
@@ -156,8 +156,18 @@ export default function App() {
         setLoading(false);
       }
     },
-    [getCommonParams, limit, page],
+    [getCommonParams, limit],
   );
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      loadReportData(1);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [loadReportData]);
 
   function handleLoad() {
     loadReportData(1);
